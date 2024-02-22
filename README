@@ -1,0 +1,108 @@
+Project 2: Word Occurence Count
+
+Andrew Bishara- ab2761
+Blake Rears- bar181
+
+
+
+Design Notes:
+
+    -> We chose to print an example of the usage of our program in the case that the user doesn't provide
+     any arguments
+        -> If an argument is neither a text file or directory, we chose to ignore it instead of killing
+         the program, this way the user still counts any valid arguments passed.
+
+    -> We chose to store kept words and counts in a linked list using a struct that holds the word, its
+     count, and the next word. 
+
+    -> Directory traversal:
+        -> Our first choice was to build the new paths as we're going through the directory. This allowed
+         us to be able to iterate all the files in the directory fairly easily, only needing one line to
+         build the path of the file we're working with, then being able to feed that path recursively into
+         the function in case the file is a subdirectory. 
+        -> We wrote the traverse() function that takes in a path to a directory. This checks to make sure
+         the given path is valid and calls opendir() if it is. Then we made sure we're not going into the
+         working directory or it's parent, which would cause an infinite loop. After that we can build the
+         new path, and use that to check its file type. Once we have its file type, we choose how to
+         handle it depending on if its a text file, directory, or other. 
+        
+    -> Counting words:
+        -> We wrote the count() function and a couple helper functions to do the counting. count() is 
+         called in traverse(), and the helper functions are called in count(). count() is passed the built
+         path to a text file that was assembled in the traverse function. 
+        -> count() opens the given file, and works in one main loop. The loop ends when there are no more
+         bytes to be read in the open file, then a nested for loop runs until it reads through the bytes
+         in the buffer. We use an integer variable, in_word, to tell if currently in the middle of a word. 
+        -> Logic:
+            -> If you're not in the middle of a word, only letters count. If char is a letter, mark in_word
+             as true, otherwise, go to next char. 
+            -> All following letters and apostrophes count until in_word is marked as false
+            -> If the char is a hyphen, check for a letter before and after. If both are letters, hyphen 
+             will count, otherwise, it does not and that is the end of the word. 
+            -> At the end of a word, call add_word_count()
+                -> This iterates through the linked list and compares the given word to all of the structs 
+                 in the list. If it matches a word, it ups the count, if it doesn't, it adds to the list
+                 and sets count to 1. 
+
+
+Test Plan:
+
+    The first thing we did while testing was make the following list:
+
+        Required functionalities of words():
+            -> Take in any amount of arguments
+                -> If its a text file, open and count words
+                -> If its a directory, open and go through files
+                -> Otherwise, we choose how to handle them
+            -> Recursively traverse through directories
+            -> Open any text files in any directory and count how many times each word occurs
+                -> Add it to the list that includes all words in any text file counted
+            -> After every file/directory has been opened, write the words and counts to an output file
+                -> These words must be sorted by occurence
+
+
+    Using this list, we could split testing into three main parts: opening/reading files, counting the
+    words, then writing to an output file. These can each be tested individually by turning off/commenting
+    out functions or lines that you are not focused on. For example, to test opening and reading files,
+    you can comment out the one line in the traverse function that calls count. 
+
+
+Testing strategies:
+
+    Reading/Opening files:
+
+        This is relatively simple to test. We put in debugging code that tells us exactly where we are in
+        this process, and some error messages in case the user doesn't include the proper arguments. To
+        test we used this program with a variety of different arguments in order to make sure it works
+        properly in all situations. We gave it directories, subdirectories, double-subdirectories, no
+        arguments, files, etc. Using the debug statements, we could tell exactly which file or directory
+        was getting checked/opened. 
+
+    Counting words:
+
+        In order to test this, we wrote textfiles that included every condition we needed to check. These
+        conditions included: first letter entered in not a letter, single hyphens, double hyphens, hypens
+        surrounded by an apostrophe, or characters that aren't letters, hypens or apostrophes. These text
+        files we wrote were in the above mentioned directories and subdirectories to make sure that files
+        in subdirectories were being counted properly.
+
+    Writing to an output file:
+
+        To implement this, we converted our linked list of word counts into a format that could be easily
+        sorted. We did this by transferring the data into an array of pointers to the WordCount
+        structures. The decision to use an array was so we could utilize the qsort function.
+
+        compare_counts was designed to sort the words first by their count in descending order, and then
+        lexicographically if the counts are equal.
+
+        In addition to sorting the word counts, the program is designed to create a new text file in the
+        current working directory where the sorted results are outputted. This is done in the
+        print_word_counts function, which opens, or creates if it doesn't exist, a file. The sorted words
+        along with their counts are then written to this file in the specified order.
+
+        To test this, we created text files with predetermined word frequencies and specific edge cases.
+
+        After running the program, we verified that the output file was sorted in order. This involved
+        checking the output against our expected results and ensuring that all edge cases were handled
+        correctly.
+        
